@@ -117,17 +117,17 @@ Content-Type: text/html; charset=utf-8
 
 上面的头信息之中，有三个与CORS请求相关的字段，都以Access-Control-开头。
 
-** 1. Access-Control-Allow-Origin **
+###### 1. Access-Control-Allow-Origin
 ```text
 该字段是必须的,他的值要么是请求Origin字段的值,要么是一个*, 表示接受任意域名的请求.
 ```
 
-** 2. Access-Control-Allow-Credentials **
+###### 2. Access-Control-Allow-Credentials
 ```text
 该字段可选。它的值是一个布尔值，表示是否允许发送Cookie。默认情况下，Cookie不包括在CORS请求之中。设为true，即表示服务器明确许可，Cookie可以包含在请求中，一起发给服务器。这个值也只能设为true，如果服务器不要浏览器发送Cookie，删除该字段即可.
 ```
 
-** 3. Access-Control-Expose-Headers **
+###### 3. Access-Control-Expose-Headers
 ```text
 该字段可选。CORS请求时，XMLHttpRequest对象的getResponseHeader()方法只能拿到6个基本字段：Cache-Control、Content-Language、Content-Type、Expires、Last-Modified、Pragma。如果想拿到其他字段，就必须在Access-Control-Expose-Headers里面指定。上面的例子指定，getResponseHeader('FooBar')可以返回FooBar字段的值。
 ```
@@ -234,18 +234,18 @@ Access-Control-Max-Age: 1728000
 ```
 
 #### 3.6 字段说明
-** 1.Access-Control-Allow-Origin **
+###### 1.Access-Control-Allow-Origin
 ```text
-	首先，客户端请求时要带上一个Origin，用来说明，本次请求来自哪个源（协议 + 域名 + 端口）。服务器根据这个值，决定是否同意这次请求。然后服务端在返回时需要带上这个字段，并把对方传过来的值返回去。告知客户端，允许这次请求。
-    这个字段也可以设置为*，即允许所有客户端访问。但是这样做会和Access-Control-Allow-Credentials 起冲突。可能导致跨域请求失败。
+首先，客户端请求时要带上一个Origin，用来说明，本次请求来自哪个源（协议 + 域名 + 端口）。服务器根据这个值，决定是否同意这次请求。然后服务端在返回时需要带上这个字段，并把对方传过来的值返回去。告知客户端，允许这次请求。
+这个字段也可以设置为*，即允许所有客户端访问。但是这样做会和Access-Control-Allow-Credentials 起冲突。可能导致跨域请求失败。
 ```
 
-** 2.Access-Control-Allow-Credentials **
+###### 2.Access-Control-Allow-Credentials
 ```text
 这个字段是一个BOOL值，可以允许客户端携带一些校验信息，比如cookie等。如果设置为Access-Control-Allow-Origin：*，而该字段是true，并且客户端开启了withCredentials, 仍然不能正确访问。需要把Access-Control-Allow-Origin的值设置为客户端传过来的值。
 ```
 
-** 3.Access-Control-Allow-Credentials **
+###### 3.Access-Control-Allow-Credentials
 ```text
 该字段与简单请求时的含义相同。
 ```
