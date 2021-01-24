@@ -38,9 +38,16 @@
 #### 备注
 > Chrome和Firefox浏览器不允许从HTTPS的域跨域访问HTTP。
 
+> 如果源地址为https, 那么目标地址也必须为https。其中必须使用有效的证书。
+> 如果目标地址为不安全的证书，请求会被浏览器拦截，将无法发送https请求。
+> 不安全的https页面的请求，浏览器会提示用户网页不安全，用户可以点击继续访问。
+
+> 而在跨域模式下，XMLHttpRequest请求，浏览器无法提示网页不安全，因此直接拦截请求。
+> 可以通过websocket的wss方式解决问题，wss的证书可以是不安全的证书。
+
 ### 3、跨域资源共享CORS
-    CORS是一个W3C标准，全称是"跨域资源共享"（Cross-origin resource sharing）。
-    它允许浏览器向跨源服务器，发出XMLHttpRequest请求，从而克服了AJAX只能同源使用的限制。
+> CORS是一个W3C标准，全称是"跨域资源共享"（Cross-origin resource sharing）。
+> 它允许浏览器向跨源服务器，发出XMLHttpRequest请求，从而克服了AJAX只能同源使用的限制。
 
 #### 3.1 Cors简介
 > CORS需要浏览器和服务器同时支持。目前，所有浏览器都支持该功能，IE浏览器不能低于IE10。
