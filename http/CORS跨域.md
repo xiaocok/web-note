@@ -124,7 +124,7 @@
     1). 普通跨域请求：只需服务器端设置Access-Control-Allow-Origin<br/>
     2). 带cookie跨域请求：前后端都需要进行设置<br/>
  
-    **【前端设置】**
+    **【前端设置】**<br/>
     根据xhr.withCredentials字段判断是否带有cookie
     * 原生ajax
     ```javascript
@@ -167,7 +167,7 @@
     axios.defaults.withCredentials = true
     ```
 
-    **<big>【服务端设置】<big>**
+    **【服务端设置】**<br/>
     服务器端对于CORS的支持，主要是通过设置Access-Control-Allow-Origin来进行的。如果浏览器检测到相应的设置，就可以允许Ajax进行跨域的访问。
     * Java后台
     * GoLang后台
