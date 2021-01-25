@@ -16,7 +16,17 @@
 比如说，域名A(http://domaina.example)的某 Web 应用通过<img>标签引入了域名B(http://domainb.foo)的某图片资源(http://domainb.foo/image.jpg)，域名A的 Web 应用就会导致浏览器发起一个跨域 HTTP 请求。
 在当今的 Web 开发中，使用跨域 HTTP 请求加载各类资源（包括CSS、图片、JavaScript 脚本以及其它类资源），已经成为了一种普遍且流行的方式。
 
-#### 1.3 浏览器禁止跨域
+#### 1.3 跨域场景分析
+
+| 当前页面url | 被请求页面url | 是否跨域 | 原因 |
+| --- | --- | --- | --- |
+|http://www.test.com/       |   http://www.test.com/index.html	|   否	    |   同源（协议、域名、端口号相同）   |
+|http://www.test.com/	    |   https://www.test.com/index.html	|   跨域	|   协议不同（http/https）         |
+|http://www.test.com/	    |   http://www.baidu.com/	        |   跨域	|   主域名不同（test/baidu）       |
+|http://www.test.com/	    |   http://blog.test.com/	        |   跨域	|   子域名不同（www/blog）         |
+|http://www.test.com:8080/	|   http://www.test.com:7001/	    |   跨域	|   端口号不同（8080/7001）        |
+
+#### 1.4 浏览器禁止跨域
 > 正如大家所知，出于安全考虑，浏览器会限制脚本中发起的跨域请求。
 比如，使用 XMLHttpRequest 对象和Fetch发起 HTTP 请求就必须遵守同源策略。 
 具体而言，Web 应用程序通过 XMLHttpRequest 对象或Fetch能且只能向同域名的资源发起 HTTP 请求，而不能向任何其它域名发起请求。
@@ -27,13 +37,154 @@
 最好的例子是[CSRF跨站伪造攻击](CSRF攻击.md)，请求是发送到了后端服务器无论是否跨域！
 注意：有些浏览器不允许从HTTPS的域跨域访问HTTP，比如Chrome和Firefox，这些浏览器在请求还未发出的时候就会拦截请求，这是一个特例。
 
+#### 1.5 非同源限制
+1. 无法读取非同源网页的 Cookie、LocalStorage 和 IndexedDB
+2. 无法接触非同源网页的 DOM
+3. 无法向非同源地址发送 AJAX 请求
+
 ### 2、解决跨域的几种方案
 #### 解决方案
-    1. CORS 普通跨域请求：只服务端设置Access-Control-Allow-Origin即可，前端无须设置，若要带cookie请求：前后端都需要设置。
-    2. JSONP 缺点：只能使用get 请求
-    3. document.domain 仅限主域相同，子域不同的跨域应用场景。
-    4. window.name
-    5. websockets
+1. 设置document.domain解决无法读取非同源网页的 Cookie问题<br/>
+    仅限主域相同，子域不同的跨域应用场景
+    因为浏览器是通过document.domain属性来检查两个页面是否同源，因此只要通过设置相同的document.domain，两个页面就可以共享Cookie。
+
+    ```javascript
+    // 两个页面都设置
+    document.domain = 'test.com';
+    ```
+
+2. 跨文档通信 API：window.postMessage()<br/>
+    调用postMessage方法实现父窗口http://test1.com向子窗口http://test2.com发消息（子窗口同样可以通过该方法发送消息给父窗口）
+
+    它可用于解决以下方面的问题：
+    * 页面和其打开的新窗口的数据传递
+    * 多窗口之间消息传递
+    * 页面与嵌套的iframe消息传递
+    * 上面三个场景的跨域数据传递
+
+    ```javascript
+    // 父窗口打开一个子窗口
+    var openWindow = window.open('http://test2.com', 'title');
+     
+    // 父窗口向子窗口发消息(第一个参数代表发送的内容，第二个参数代表接收消息窗口的url)
+    openWindow.postMessage('Nice to meet you!', 'http://test2.com');
+    ```
+    
+    调用message事件，监听对方发送的消息
+    ```javascript
+    // 监听 message 消息
+    window.addEventListener('message', function (e) {
+      console.log(e.source); // e.source 发送消息的窗口
+      console.log(e.origin); // e.origin 消息发向的网址
+      console.log(e.data);   // e.data   发送的消息
+    },false);
+    ```
+    
+3. JSONP<br/>
+    JSONP 是服务器与客户端跨源通信的常用方法。最大特点就是简单适用，兼容性好（兼容低版本IE），缺点是只支持get请求，不支持post请求。<br/>
+    核心思想：网页通过添加一个< script >元素，向服务器请求 JSON 数据，服务器收到请求后，将数据放在一个指定名字的回调函数的参数位置传回来。
+    
+    * 原生实现：
+    ```javascript
+    <script src="http://test.com/data.php?callback=dosomething"></script>
+    // 向服务器test.com发出请求，该请求的查询字符串有一个callback参数，用来指定回调函数的名字
+     
+    // 处理服务器返回回调函数的数据
+    <script type="text/javascript">
+        function dosomething(res){
+            // 处理获得的数据
+            console.log(res.data)
+        }
+    </script>
+    ```
+    
+    *  jQuery ajax：
+    ```javascript
+    $.ajax({
+        url: 'http://www.test.com:8080/login',
+        type: 'get',
+        dataType: 'jsonp',  // 请求方式为jsonp
+        jsonpCallback: "handleCallback",    // 自定义回调函数名
+        data: {}
+    });
+    ```
+    
+    * Vue.js
+    ```javascript
+    this.$http.jsonp('http://www.domain2.com:8080/login', {
+        params: {},
+        jsonp: 'handleCallback'
+    }).then((res) => {
+        console.log(res); 
+    })
+    ```
+    
+4. CORS<br/>
+    CORS 是跨域资源分享（Cross-Origin Resource Sharing）的缩写。它是 W3C 标准，属于跨源 AJAX 请求的根本解决方法。<br/>
+    1). 普通跨域请求：只需服务器端设置Access-Control-Allow-Origin<br/>
+    2). 带cookie跨域请求：前后端都需要进行设置<br/>
+ 
+    **【前端设置】**
+    根据xhr.withCredentials字段判断是否带有cookie
+    * 原生ajax
+    ```javascript
+    var xhr = new XMLHttpRequest(); // IE8/9需用window.XDomainRequest兼容
+     
+    // 前端设置是否带cookie
+    xhr.withCredentials = true;
+     
+    xhr.open('post', 'http://www.domain2.com:8080/login', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.send('user=admin');
+     
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            alert(xhr.responseText);
+        }
+    };
+    ```
+    
+    * jQuery ajax 
+    ```javascript
+    $.ajax({
+       url: 'http://www.test.com:8080/login',
+       type: 'get',
+       data: {},
+       xhrFields: {
+           withCredentials: true    // 前端设置是否带cookie
+       },
+       crossDomain: true,   // 会让请求头中包含跨域的额外信息，但不会含cookie
+    });
+    ```
+    
+    * vue-resource
+    ```javascript
+    Vue.http.options.credentials = true
+    ```
+    
+    * axios 
+    ```javascript
+    axios.defaults.withCredentials = true
+    ```
+
+    **<big>【服务端设置】<big>**
+    服务器端对于CORS的支持，主要是通过设置Access-Control-Allow-Origin来进行的。如果浏览器检测到相应的设置，就可以允许Ajax进行跨域的访问。
+    * Java后台
+    * GoLang后台
+    * Nodejs后台
+    * PHP后台<br/>
+        ```php
+        <?php
+         header("Access-Control-Allow-Origin:*");
+        ``` 
+    * Apache<br/>
+        需要使用mod_headers模块来激活HTTP头的设置，它默认是激活的。你只需要在Apache配置文件的<Directory>, <Location>, <Files>或<VirtualHost>的配置里加入以下内容即可。
+        ```text
+        Header set Access-Control-Allow-Origin *
+        ```
+   
+5. window.name<br/>
+6. websockets<br/>
 
 #### 备注
 > Chrome和Firefox浏览器不允许从HTTPS的域跨域访问HTTP。
@@ -43,7 +194,7 @@
 > 不安全的https页面的请求，浏览器会提示用户网页不安全，用户可以点击继续访问。
 
 > 而在跨域模式下，XMLHttpRequest请求，浏览器无法提示网页不安全，因此直接拦截请求。
-> 可以通过websocket的wss方式解决问题，wss的证书可以是不安全的证书。
+
 
 ### 3、跨域资源共享CORS
 > CORS是一个W3C标准，全称是"跨域资源共享"（Cross-origin resource sharing）。
@@ -402,5 +553,6 @@ func main() {
 #### 参考
 * [跨域共享CORS详解及Gin配置跨域](https://www.cnblogs.com/you-men/p/14054348.html)
 * [HTTP访问控制(CORS),解决跨域问题](https://blog.csdn.net/thc1987/article/details/54572272)
+* [什么是跨域？跨域解决方法](https://blog.csdn.net/qq_38128179/article/details/84956552)
 * [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
 * [Fetch Standard](https://fetch.spec.whatwg.org)

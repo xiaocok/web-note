@@ -8,3 +8,4 @@ web总结
     * [CSRF跨站点请求伪造](http/CSRF攻击.md)
     * [CORS跨域HTTP请求](http/CORS跨域.md)
 * 消息队列
+    * [接口的幂等性](queue/接口的幂等性.md)
