@@ -442,7 +442,7 @@ JSONP只支持GET请求，CORS支持所有类型的HTTP请求。JSONP的优势�
 
 #### 4.2 配置cors跨域
 
-** gin原生代码实现cors **
+**gin原生代码实现cors**
 ```go
 package main
 import (
@@ -496,7 +496,7 @@ func Cors() gin.HandlerFunc {
 
 ```
 
-** 处理跨域请求,支持options访问 **
+**处理跨域请求,支持options访问**
 ```go
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -518,7 +518,7 @@ func Cors() gin.HandlerFunc {
 }
 ```
 
-** 使用gin的cors包 **
+**使用gin的cors包**
 ```go
 package main
 
